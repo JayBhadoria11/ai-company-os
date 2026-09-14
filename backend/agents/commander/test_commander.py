@@ -7,6 +7,7 @@ from backend.schemas.agent import AgentResponse, Finding
 
 
 DATA_PATH = Path(__file__).resolve().parents[3] / "data" / "revenue.csv"
+EXPENSES_PATH = Path(__file__).resolve().parents[3] / "data" / "expenses.csv"
 
 
 def make_response(
@@ -175,3 +176,92 @@ def test_run_with_file_path_contains_product_c_decline():
     assert product_c["latest_revenue"] == 62000
     assert product_c["change"] == pytest.approx(-0.43)
     assert any("Product C" in finding["finding"] for finding in analyst_result["findings"])
+
+
+def test_execute_finance_task_returns_agent_response():
+    commander = Commander()
+    task = {
+        "task_id": "task_002",
+        "agent": "finance",
+        "objective": "Review financial impact and cash flow risks.",
+    }
+
+    response = commander.execute_finance_task(task, str(EXPENSES_PATH))
+
+    assert isinstance(response, AgentResponse)
+    assert response.agent == "finance"
+    assert response.task_id == "task_002"
+    assert response.findings
+    assert response.metrics
+
+
+def test_execute_finance_task_requires_finance_task():
+    commander = Commander()
+    task = {
+        "task_id": "task_001",
+        "agent": "analyst",
+        "objective": "Analyze revenue and identify major changes.",
+    }
+
+    with pytest.raises(ValueError, match="finance"):
+        commander.execute_finance_task(task, str(EXPENSES_PATH))
+
+
+def test_execute_finance_task_requires_task_id():
+    commander = Commander()
+
+    with pytest.raises(ValueError, match="task_id"):
+        commander.execute_finance_task({"agent": "finance"}, str(EXPENSES_PATH))
+
+
+def test_run_with_finance_file_path_executes_finance():
+    commander = Commander()
+
+    result = commander.run(
+        "Find out why profitability changed.",
+        finance_file_path=str(EXPENSES_PATH),
+    )
+
+    assert "finance" in result["results"]
+    assert "analyst" not in result["results"]
+    assert result["results"]["finance"]["responses"][0]["status"] == "completed"
+
+
+def test_run_with_finance_file_path_identifies_marketing_expense_increase():
+    commander = Commander()
+
+    result = commander.run(
+        "Find out why profitability changed.",
+        finance_file_path=str(EXPENSES_PATH),
+    )
+    finance_result = result["results"]["finance"]
+
+    assert (
+        finance_result["metrics"]["largest_category_increase"]["category"]
+        == "Marketing"
+    )
+    assert (
+        finance_result["metrics"]["largest_category_increase"]["amount_change"]
+        == 15000
+    )
+    assert any("Marketing" in finding["finding"] for finding in finance_result["findings"])
+
+
+def test_run_with_revenue_and_finance_file_paths_executes_both_agents():
+    commander = Commander()
+
+    result = commander.run(
+        "Find out why revenue dropped and profitability changed.",
+        file_path=str(DATA_PATH),
+        finance_file_path=str(EXPENSES_PATH),
+    )
+
+    assert set(result["results"]) == {"analyst", "finance"}
+    assert result["results"]["analyst"]["responses"][0]["agent"] == "analyst"
+    assert result["results"]["finance"]["responses"][0]["agent"] == "finance"
+    assert (
+        result["results"]["finance"]["metrics"]["largest_category_increase"][
+            "category"
+        ]
+        == "Marketing"
+    )
