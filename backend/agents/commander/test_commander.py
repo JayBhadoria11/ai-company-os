@@ -1,7 +1,12 @@
+from pathlib import Path
+
 import pytest
 
 from backend.agents.commander.commander import Commander
 from backend.schemas.agent import AgentResponse, Finding
+
+
+DATA_PATH = Path(__file__).resolve().parents[3] / "data" / "revenue.csv"
 
 
 def make_response(
@@ -108,3 +113,65 @@ def test_collect_results_rejects_invalid_result_type():
 
     with pytest.raises(TypeError, match="AgentResponse"):
         commander.collect_results([{"agent": "analyst"}])
+
+
+def test_execute_analyst_task_returns_agent_response():
+    commander = Commander()
+    task = {
+        "task_id": "task_001",
+        "agent": "analyst",
+        "objective": "Analyze revenue and identify major changes.",
+    }
+
+    response = commander.execute_analyst_task(task, str(DATA_PATH))
+
+    assert isinstance(response, AgentResponse)
+    assert response.agent == "analyst"
+    assert response.task_id == "task_001"
+
+
+def test_execute_analyst_task_requires_analyst_task():
+    commander = Commander()
+    task = {
+        "task_id": "task_002",
+        "agent": "finance",
+        "objective": "Review financial impact.",
+    }
+
+    with pytest.raises(ValueError, match="analyst"):
+        commander.execute_analyst_task(task, str(DATA_PATH))
+
+
+def test_execute_analyst_task_requires_task_id():
+    commander = Commander()
+
+    with pytest.raises(ValueError, match="task_id"):
+        commander.execute_analyst_task({"agent": "analyst"}, str(DATA_PATH))
+
+
+def test_run_with_file_path_executes_analyst():
+    commander = Commander()
+
+    result = commander.run("Find out why revenue dropped.", file_path=str(DATA_PATH))
+
+    assert result["objective"] == "Find out why revenue dropped."
+    assert [task["agent"] for task in result["plan"]] == [
+        "analyst",
+        "finance",
+        "marketing",
+    ]
+    assert "analyst" in result["results"]
+    assert result["results"]["analyst"]["responses"][0]["status"] == "completed"
+
+
+def test_run_with_file_path_contains_product_c_decline():
+    commander = Commander()
+
+    result = commander.run("Find out why revenue dropped.", file_path=str(DATA_PATH))
+    analyst_result = result["results"]["analyst"]
+    product_c = analyst_result["metrics"]["products"]["Product C"]
+
+    assert product_c["previous_revenue"] == 108000
+    assert product_c["latest_revenue"] == 62000
+    assert product_c["change"] == pytest.approx(-0.43)
+    assert any("Product C" in finding["finding"] for finding in analyst_result["findings"])

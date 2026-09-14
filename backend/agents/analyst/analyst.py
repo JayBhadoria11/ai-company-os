@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from backend.schemas.agent import AgentResponse, Finding
+
 
 REQUIRED_COLUMNS = {"month", "product", "revenue"}
 
@@ -70,3 +72,78 @@ def analyze_revenue(file_path: str) -> dict:
         "previous_month": previous_month,
         "products": results,
     }
+
+
+def analyze_revenue_as_agent(task_id: str, file_path: str) -> AgentResponse:
+    analysis = analyze_revenue(file_path)
+    products = analysis["products"]
+
+    previous_total = sum(product["previous_revenue"] for product in products)
+    latest_total = sum(product["latest_revenue"] for product in products)
+    total_change = None
+    if previous_total != 0:
+        total_change = float(round((latest_total - previous_total) / previous_total, 2))
+
+    product_metrics = {
+        product["product"]: {
+            "previous_revenue": product["previous_revenue"],
+            "latest_revenue": product["latest_revenue"],
+            "change": product["change"],
+        }
+        for product in products
+    }
+
+    findings = [
+        Finding(
+            finding=(
+                f"{product['product']} revenue changed by {product['change']:.0%} "
+                f"from {analysis['previous_month']} to {analysis['month']}."
+            ),
+            evidence=(
+                f"{analysis['previous_month']} revenue was "
+                f"{product['previous_revenue']}; {analysis['month']} revenue was "
+                f"{product['latest_revenue']}."
+            ),
+        )
+        for product in products
+        if product["change"] is not None and product["change"] <= -0.1
+    ]
+
+    if not findings:
+        findings.append(
+            Finding(
+                finding=(
+                    f"No product revenue decline of 10% or more was found from "
+                    f"{analysis['previous_month']} to {analysis['month']}."
+                ),
+                evidence=f"Analyzed {len(products)} products in the revenue dataset.",
+            )
+        )
+
+    recommendations = [
+        (
+            f"Investigate {product['product']} retention, pipeline, and customer "
+            "feedback before finalizing the recovery plan."
+        )
+        for product in products
+        if product["change"] is not None and product["change"] <= -0.1
+    ]
+
+    if not recommendations:
+        recommendations.append("Continue monitoring revenue by product each month.")
+
+    return AgentResponse(
+        task_id=task_id,
+        agent="analyst",
+        status="completed",
+        findings=findings,
+        metrics={
+            "previous_month": analysis["previous_month"],
+            "latest_month": analysis["month"],
+            "previous_total_revenue": previous_total,
+            "latest_total_revenue": latest_total,
+            "total_change": total_change,
+            "products": product_metrics,
+        },
+        recommendations=recommendations,
+    )

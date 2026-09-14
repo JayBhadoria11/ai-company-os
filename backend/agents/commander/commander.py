@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Any
 
+from backend.agents.analyst.analyst import analyze_revenue_as_agent
 from backend.schemas.agent import AgentResponse
 
 
@@ -52,11 +53,42 @@ class Commander:
 
         return dict(collected)
 
-    def run(self, objective: str, results: list[AgentResponse]) -> dict[str, Any]:
+    def execute_analyst_task(
+        self, task: dict[str, str], file_path: str
+    ) -> AgentResponse:
+        if not isinstance(task, dict):
+            raise TypeError("task must be a dictionary.")
+
+        if task.get("agent") != "analyst":
+            raise ValueError("execute_analyst_task requires an analyst task.")
+
+        task_id = task.get("task_id")
+        if not task_id:
+            raise ValueError("Analyst task must contain a task_id.")
+
+        return analyze_revenue_as_agent(task_id=task_id, file_path=file_path)
+
+    def run(
+        self,
+        objective: str,
+        results: list[AgentResponse] | None = None,
+        file_path: str | None = None,
+    ) -> dict[str, Any]:
         self._validate_objective(objective)
 
         plan = self.create_plan(objective)
-        collected_results = self.collect_results(results)
+        if results is None:
+            agent_results = []
+        elif not isinstance(results, list):
+            raise TypeError("results must be a list of AgentResponse objects.")
+        else:
+            agent_results = list(results)
+
+        if file_path is not None:
+            analyst_task = next(task for task in plan if task["agent"] == "analyst")
+            agent_results.append(self.execute_analyst_task(analyst_task, file_path))
+
+        collected_results = self.collect_results(agent_results)
 
         return {
             "objective": objective,
