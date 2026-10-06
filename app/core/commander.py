@@ -40,6 +40,157 @@ AVAILABLE_AGENTS = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Synthesis context bounds.
+#
+# The synthesis call uses a fixed output budget (max_tokens=4000) that must not
+# change. Large datasets (for example a 400k-row train.csv) can otherwise inflate
+# the prompt with duplicated raw breakdowns, so Nemotron spends its whole output
+# budget before emitting any content and returns finish_reason="length" with an
+# empty message. The deterministic analysis stays complete; only the text sent to
+# the LLM is bounded and de-duplicated.
+# ---------------------------------------------------------------------------
+SYNTHESIS_EVIDENCE_CHAR_LIMIT = 14000
+SYNTHESIS_PROMPT_CHAR_BUDGET = 26000
+
+# Top-N slices kept in the synthesis evidence digest. These are display-only
+# caps: the full deterministic analysis is still stored in the agent metrics.
+_EVIDENCE_PRODUCTS = 8
+_EVIDENCE_REGIONS = 8
+_EVIDENCE_CHANNELS = 5
+_EVIDENCE_MONTHS = 12
+_EVIDENCE_DECLINING = 8
+_EVIDENCE_INSIGHTS = 8
+_EVIDENCE_LIMITATIONS = 8
+_EVIDENCE_DEPARTMENTS = 10
+
+
+def _take(items, count):
+    if not isinstance(items, list):
+        return items
+    return items[:count]
+
+
+def _compact_reasoning_for_prompt(reasoning):
+    """Drop the raw sales-pattern arrays that duplicate the evidence digest.
+
+    The computed strongest/weakest/trend values are kept; the full region,
+    product and monthly lists are not needed by the LLM and are the main source
+    of duplicated context for large datasets.
+    """
+
+    if not isinstance(reasoning, dict):
+        return reasoning
+
+    compact = dict(reasoning)
+    pattern = reasoning.get("sales_pattern")
+
+    if isinstance(pattern, dict):
+        compact["sales_pattern"] = {
+            "strongest_region": pattern.get("strongest_region"),
+            "weakest_region": pattern.get("weakest_region"),
+            "strongest_product": pattern.get("strongest_product"),
+            "weakest_product": pattern.get("weakest_product"),
+            "weakest_declining_region": pattern.get("weakest_declining_region"),
+            "strongest_month": pattern.get("strongest_month"),
+            "weakest_month": pattern.get("weakest_month"),
+            "trend_change_pct": pattern.get("trend_change_pct"),
+        }
+
+    return compact
+
+
+def _compact_evidence_for_prompt(evidence_by_dataset):
+    """Build a small, decision-relevant evidence digest for the synthesis prompt.
+
+    Keeps the KPIs, the top product/region slices, monthly trend, workforce
+    fields and limitations. Large cross-tab arrays that the reasoning pack never
+    uses (product_region, product_channel, sellers, payments, reviews) are
+    omitted from the prompt while remaining intact in the stored evidence.
+    """
+
+    digest = {}
+
+    for filename, payload in (evidence_by_dataset or {}).items():
+        payload = payload or {}
+        domain = payload.get("domain")
+        data = payload.get("evidence", {}) or {}
+
+        if domain == "workforce":
+            digest[filename] = {
+                "domain": domain,
+                "dataset": data.get("dataset") or "workforce",
+                "headcount": data.get("headcount"),
+                "attrition": data.get("attrition"),
+                "overtime": data.get("overtime"),
+                "departments": _take(data.get("departments"), _EVIDENCE_DEPARTMENTS),
+                "department_metrics": _take(
+                    data.get("department_metrics"), _EVIDENCE_DEPARTMENTS
+                ),
+                "available_fields": data.get("available_fields"),
+                "limitations": _take(
+                    data.get("limitations"), _EVIDENCE_LIMITATIONS
+                ),
+            }
+            continue
+
+        declining = data.get("declining")
+        compact_declining = None
+        if isinstance(declining, dict):
+            compact_declining = {
+                "products": _take(
+                    declining.get("products"), _EVIDENCE_DECLINING
+                ),
+                "regions": _take(declining.get("regions"), _EVIDENCE_DECLINING),
+            }
+        elif isinstance(declining, list):
+            compact_declining = _take(declining, _EVIDENCE_DECLINING)
+
+        monthly = data.get("monthly") or []
+        if isinstance(monthly, list):
+            monthly = monthly[-_EVIDENCE_MONTHS:]
+
+        digest[filename] = {
+            "domain": domain,
+            "dataset": data.get("dataset"),
+            "metrics": data.get("metrics"),
+            "top_products": _take(data.get("products"), _EVIDENCE_PRODUCTS),
+            "top_regions": _take(data.get("regions"), _EVIDENCE_REGIONS),
+            "channels": _take(data.get("channels"), _EVIDENCE_CHANNELS),
+            "monthly": monthly,
+            "declining": compact_declining,
+            "insights": _take(data.get("insights"), _EVIDENCE_INSIGHTS),
+            "limitations": _take(
+                data.get("limitations"), _EVIDENCE_LIMITATIONS
+            ),
+        }
+
+    return digest
+
+
+def _bounded_json(value, limit):
+    """Serialize compactly and hard-cap the result as a last-resort safeguard."""
+
+    text = json.dumps(value, separators=(",", ":"), default=str)
+
+    if len(text) <= limit:
+        return text
+
+    return json.dumps(
+        {
+            "truncated": True,
+            "note": (
+                "Additional evidence was omitted to stay within the synthesis "
+                "context budget. The deterministic reasoning pack above is "
+                "authoritative."
+            ),
+            "evidence_head": text[:limit],
+        },
+        separators=(",", ":"),
+        default=str,
+    )
+
+
 def _parse_commander_plan(raw_response):
     cleaned = re.sub(
         r"^```(?:json)?\s*|\s*```$",
@@ -185,6 +336,12 @@ def _build_company_prompt(company, combined, reasoning, questions):
         for index, question in enumerate(questions)
     )
 
+    reasoning_context = _compact_reasoning_for_prompt(reasoning)
+    evidence_context = _bounded_json(
+        _compact_evidence_for_prompt(combined.get("evidence", {})),
+        SYNTHESIS_EVIDENCE_CHAR_LIMIT,
+    )
+
     return f"""
 You are the final business intelligence analyst for {company}.
 
@@ -236,7 +393,7 @@ REASONING RULES:
   such as "No question was provided".
 
 DETERMINISTIC REASONING PACK (authoritative — do not contradict):
-{json.dumps(reasoning, indent=2, default=str)}
+{json.dumps(reasoning_context, separators=(",", ":"), default=str)}
 
 AUTHORITATIVE EXECUTIVE SUMMARY DRAFT:
 {reasoning.get("executive_summary_draft", "")}
@@ -244,10 +401,10 @@ AUTHORITATIVE EXECUTIVE SUMMARY DRAFT:
 Your executive summary must preserve this draft's facts, uncertainty and labels.
 
 CONNECTED DATASETS:
-{json.dumps(combined.get("datasets_used", []), indent=2, default=str)}
+{json.dumps(combined.get("datasets_used", []), separators=(",", ":"), default=str)}
 
-DATASET EVIDENCE:
-{json.dumps(combined.get("evidence", {}), indent=2, default=str)}
+DATASET EVIDENCE (decision-relevant digest; full analysis retained internally):
+{evidence_context}
 
 USER QUESTIONS:
 {question_lines}
