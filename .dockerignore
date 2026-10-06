@@ -1,0 +1,32 @@
+# Secrets and local configuration - never copied into the image.
+.env
+**/.env
+.env.local
+**/.env.local
+
+# Version control / editors
+.git
+.gitignore
+
+# Python
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.pytest_tmp
+.pytest_temp
+*.db
+**/*.db
+*.sqlite
+**/*.sqlite
+
+# Node
+**/node_modules
+
+# Rebuilt inside the builder stage
+frontend/dist
+
+# Not needed at runtime
+tests
+README.md
