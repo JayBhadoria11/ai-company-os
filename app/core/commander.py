@@ -15,6 +15,13 @@ from app.llm.nebius_client import get_completion
 SYSTEM_PROMPT = """
 You are the Commander/CEO agent inside AI Company OS.
 
+You may ONLY select these agents:
+- analyst
+- marketing
+- hr
+
+Never select any other agent, including data_engineer or finance.
+
 Return ONLY valid JSON:
 {
   "executive_summary": "Brief description.",
