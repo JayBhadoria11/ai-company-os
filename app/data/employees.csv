@@ -1,0 +1,7 @@
+employee_id,department,role,capacity_hours,assigned_hours,completed_tasks,pending_tasks
+E001,Engineering,Backend Developer,40,36,8,2
+E002,Engineering,ML Engineer,40,42,7,5
+E003,Marketing,Marketing Specialist,40,30,10,1
+E004,Finance,Financial Analyst,40,38,9,3
+E005,Operations,Operations Manager,40,44,6,6
+E006,HR,HR Specialist,40,28,12,1

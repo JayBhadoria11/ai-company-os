@@ -1,0 +1,934 @@
+
+.workshop-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.workshop-page-header h1 {
+  margin: 6px 0 8px;
+}
+
+.workshop-page-header p {
+  margin: 0;
+  opacity: .55;
+}
+
+.workshop-save-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.workshop-saved {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.workshop-save-btn,
+.workshop-mobile-save {
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: inherit;
+  border-radius: 8px;
+  padding: 11px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.workshop-save-btn:hover,
+.workshop-mobile-save:hover {
+  background: rgba(255,255,255,.11);
+}
+
+.workshop-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(310px, .85fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.workshop-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.workshop-section,
+.workshop-preview {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.025);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+
+.workshop-section {
+  padding: 22px;
+}
+
+.workshop-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 22px;
+}
+
+.workshop-section-heading h2 {
+  margin: 5px 0 0;
+  font-size: 17px;
+}
+
+.workshop-section-heading svg {
+  opacity: .5;
+}
+
+.workshop-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 17px;
+}
+
+.workshop-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workshop-form-grid label > span {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  opacity: .48;
+}
+
+.workshop-form-grid input,
+.workshop-form-grid select,
+.workshop-form-grid textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(0,0,0,.16);
+  color: inherit;
+  border-radius: 8px;
+  padding: 12px 13px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.workshop-form-grid input:focus,
+.workshop-form-grid select:focus,
+.workshop-form-grid textarea:focus {
+  border-color: rgba(255,255,255,.3);
+}
+
+.workshop-form-grid textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.workshop-full {
+  grid-column: 1 / -1;
+}
+
+.workshop-preview {
+  position: sticky;
+  top: 20px;
+  padding: 22px;
+}
+
+.workshop-preview-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.workshop-live-dot {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  opacity: .6;
+}
+
+.workshop-company-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.workshop-company-mark {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.08);
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.workshop-company-card h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.workshop-company-card p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  opacity: .5;
+}
+
+.workshop-description {
+  margin: 20px 0;
+  padding: 15px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.025);
+  font-size: 12px;
+  line-height: 1.65;
+  opacity: .65;
+}
+
+.workshop-profile-list {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 15px;
+}
+
+.workshop-profile-list div,
+.workshop-data-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.workshop-profile-list span,
+.workshop-data-stats span,
+.workshop-config-card > div span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  opacity: .42;
+}
+
+.workshop-profile-list strong,
+.workshop-data-stats strong {
+  font-size: 12px;
+}
+
+.workshop-preview-divider {
+  height: 1px;
+  background: rgba(255,255,255,.08);
+  margin: 22px 0;
+}
+
+.workshop-data-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.workshop-data-heading h3 {
+  margin: 5px 0 0;
+  font-size: 15px;
+}
+
+.workshop-data-heading svg {
+  opacity: .55;
+}
+
+.workshop-data-stats {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 1px;
+  margin-top: 15px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 9px;
+  background: rgba(255,255,255,.07);
+}
+
+.workshop-data-stats div {
+  padding: 13px;
+  background: rgba(0,0,0,.13);
+}
+
+.workshop-config-card {
+  margin-top: 18px;
+  padding: 15px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 9px;
+  background: rgba(255,255,255,.025);
+}
+
+.workshop-config-card > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding-top: 11px;
+  margin-top: 11px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  font-size: 11px;
+}
+
+.workshop-config-card strong {
+  text-align: right;
+}
+
+.workshop-mobile-save {
+  display: none;
+  width: 100%;
+}
+
+@media (max-width: 1050px) {
+  .workshop-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .workshop-preview {
+    position: static;
+  }
+}
+
+@media (max-width: 700px) {
+  .workshop-page-header {
+    align-items: flex-start;
+  }
+
+  .workshop-save-btn {
+    display: none;
+  }
+
+  .workshop-mobile-save {
+    display: inline-flex;
+  }
+
+  .workshop-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workshop-full {
+    grid-column: auto;
+  }
+}
+
+.page-shell {
+  width: 100%;
+}
+
+.error-banner,
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  padding: 13px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.error-banner {
+  border: 1px solid rgba(255, 96, 96, 0.35);
+  background: rgba(255, 96, 96, 0.09);
+  color: #ffb4b4;
+}
+
+.success-banner {
+  border: 1px solid rgba(118, 185, 0, 0.35);
+  background: rgba(118, 185, 0, 0.1);
+  color: #c6f06a;
+}
+
+.workshop-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 96, 96, 0.28);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.02);
+  color: #e6a3a3;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.workshop-reset-btn:hover {
+  border-color: rgba(255, 96, 96, 0.5);
+  background: rgba(255, 96, 96, 0.09);
+  color: #ffc0c0;
+}
+
+.workshop-reset-btn:active {
+  background: rgba(255, 96, 96, 0.14);
+}
+
+.workshop-reset-btn:focus-visible {
+  outline: 2px solid rgba(255, 96, 96, 0.5);
+  outline-offset: 2px;
+}
+
+.workshop-reset-btn:disabled,
+.workshop-save-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.workshop-dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 26px 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.16);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.workshop-dropzone:hover {
+  border-color: rgba(118, 185, 0, 0.55);
+  background: rgba(118, 185, 0, 0.05);
+}
+
+.workshop-dropzone strong {
+  font-size: 14px;
+}
+
+.workshop-dropzone > span {
+  font-size: 12px;
+  opacity: 0.5;
+}
+
+.workshop-file-input {
+  display: none;
+}
+
+.workshop-inline-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.workshop-spin {
+  animation: workshop-spin 1s linear infinite;
+}
+
+@keyframes workshop-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.workshop-data-block {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.workshop-dataset-collection {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.workshop-dataset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workshop-dataset-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.workshop-dataset-row-file {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.workshop-dataset-row-file strong {
+  display: block;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.workshop-dataset-row-file span {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  opacity: 0.55;
+}
+
+.workshop-data-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.workshop-data-file {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.workshop-data-file strong {
+  display: block;
+  font-size: 14px;
+}
+
+.workshop-data-file span {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  opacity: 0.55;
+}
+
+.workshop-data-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.workshop-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.workshop-mini-btn:hover {
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.workshop-mini-btn.danger {
+  border-color: rgba(255, 96, 96, 0.3);
+  color: #ffb4b4;
+}
+
+.workshop-mini-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.workshop-dataset-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.workshop-dataset-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 13px;
+  background: rgba(0, 0, 0, 0.13);
+}
+
+.workshop-dataset-stats span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  opacity: 0.42;
+}
+
+.workshop-dataset-stats strong {
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.workshop-columns {
+  margin-top: 16px;
+}
+
+.workshop-column-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.workshop-column-chip {
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.workshop-column-chip.more {
+  opacity: 0.6;
+}
+
+.workshop-preview-table-wrap {
+  margin-top: 16px;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+}
+
+.workshop-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.workshop-preview-table th,
+.workshop-preview-table td {
+  padding: 9px 12px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.workshop-preview-table th {
+  position: sticky;
+  top: 0;
+  background: #14171c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.workshop-preview-table tr:last-child td {
+  border-bottom: none;
+}
+
+.workshop-limitations {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(255, 200, 80, 0.22);
+  border-radius: 9px;
+  background: rgba(255, 200, 80, 0.05);
+}
+
+.workshop-limitations ul {
+  margin: 9px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0.75;
+}
+
+.workshop-data-empty {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.workshop-data-empty strong {
+  display: block;
+  font-size: 13px;
+}
+
+.workshop-data-empty span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.55;
+  line-height: 1.5;
+}
+
+.workshop-connections {
+  margin-top: 18px;
+}
+
+.workshop-connection-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.workshop-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.workshop-connection.is-connected {
+  border-color: rgba(118, 185, 0, 0.4);
+  background: rgba(118, 185, 0, 0.08);
+  color: #c6f06a;
+}
+
+.workshop-connection.is-offline {
+  opacity: 0.45;
+}
+
+.workshop-source-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 18px;
+  padding: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 11px;
+  line-height: 1.55;
+  opacity: 0.65;
+}
+
+.approval-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 4px;
+}
+
+.approval-empty h3 {
+  margin: 0;
+}
+
+.approval-empty p {
+  margin: 0;
+  opacity: 0.6;
+  line-height: 1.6;
+}
+
+.approval-limitations {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+/* Reset confirmation modal (shared by Workspace and History resets) */
+
+.reset-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.reset-modal {
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  background: #15171c;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+}
+
+.reset-modal-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: rgba(255, 96, 96, 0.14);
+  color: #ffb4b4;
+}
+
+.reset-modal h3 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 20px;
+}
+
+.reset-modal p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.reset-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.reset-cancel-btn,
+.reset-confirm-btn {
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reset-cancel-btn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: #fff;
+}
+
+.reset-confirm-btn {
+  border: none;
+  background: #ff6b6b;
+  color: #15171c;
+}
+
+.reset-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.reset-confirm-btn:hover {
+  opacity: 0.88;
+}
+
+.reset-cancel-btn:disabled,
+.reset-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Company Workshop confirmation modal refinements.
+   Scoped to --workspace so the shared History reset modal is untouched. */
+
+.reset-modal-overlay--workspace {
+  background: rgba(0, 0, 0, 0.68);
+}
+
+.reset-modal--workspace {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #12151a;
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.reset-modal--workspace .reset-modal-icon {
+  background: rgba(255, 96, 96, 0.12);
+  border: 1px solid rgba(255, 96, 96, 0.28);
+  color: #ffb4b4;
+}
+
+.reset-modal--workspace h3 {
+  font-size: 19px;
+  letter-spacing: -0.3px;
+}
+
+.reset-modal--workspace p {
+  max-width: 360px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.reset-modal--workspace .reset-confirm-btn {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #d9534f;
+  color: #fff;
+  font-weight: 700;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.reset-modal--workspace .reset-confirm-btn:hover {
+  background: #e0605c;
+  border-color: rgba(255, 255, 255, 0.14);
+  opacity: 1;
+}
+
+.reset-modal--workspace .reset-cancel-btn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: #d7ded9;
+}
+
+@media (max-width: 760px) {
+  .workshop-dataset-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workshop-save-status {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .workshop-reset-btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .reset-modal--workspace .reset-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .reset-modal--workspace .reset-cancel-btn,
+  .reset-modal--workspace .reset-confirm-btn {
+    width: 100%;
+  }
+}
+
