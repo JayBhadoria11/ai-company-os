@@ -37,12 +37,20 @@ def get_completion(
 
     choice = response.choices[0]
     content = choice.message.content
+    finish_reason = getattr(choice, "finish_reason", None)
 
     if content is None or not content.strip():
         raise ValueError(
             f"Nemotron returned empty content. "
-            f"Finish reason: {choice.finish_reason}. "
+            f"Finish reason: {finish_reason}. "
             "Try increasing max_tokens or simplifying the prompt."
+        )
+
+    if finish_reason == "length":
+        raise ValueError(
+            "Nemotron stopped early (finish_reason='length') and returned "
+            "incomplete output. The truncated response will not be used. "
+            "Simplify the request or increase max_tokens."
         )
 
     return content.strip()

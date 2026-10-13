@@ -483,19 +483,37 @@ def _run_company_investigation(task_id, query):
         questions,
     )
 
-    raw = get_completion(
-        prompt=prompt,
-        system_prompt=(
-            "You are a strict evidence-grounded company intelligence "
-            "analyst working across multiple connected datasets. "
-            "Never fabricate numbers or missing data. Preserve the evidence "
-            "classification and uncertainty provided to you."
-        ),
-        temperature=0.1,
-        max_tokens=4000,
-    )
+    try:
+        raw = get_completion(
+            prompt=prompt,
+            system_prompt=(
+                "You are a strict evidence-grounded company intelligence "
+                "analyst working across multiple connected datasets. "
+                "Never fabricate numbers or missing data. Preserve the evidence "
+                "classification and uncertainty provided to you."
+            ),
+            temperature=0.1,
+            max_tokens=4000,
+        )
+    except ValueError:
+        raw = None
 
-    raw = _sanitize_investigation_text(raw)
+    raw = _sanitize_investigation_text(raw) if raw else None
+
+    # Never treat empty or truncated (finish_reason="length") Nemotron output
+    # as a successful answer. When synthesis is unusable, fall back to the
+    # deterministic reasoning pack and label it clearly so we never claim that
+    # Nemotron synthesis succeeded.
+    synthesis_fallback = raw is None or not raw.strip()
+
+    if synthesis_fallback:
+        verified_summary = reasoning.get("executive_summary_draft", "") or ""
+        raw = (
+            "AI synthesis was unavailable: Nemotron returned empty or "
+            "truncated output. The following is a deterministic fallback "
+            "built from verified evidence, not Nemotron synthesis."
+            + (f"\n\n{verified_summary}" if verified_summary else "")
+        ).strip()
 
     datasets_used = combined.get("datasets_used", [])
     source_datasets = combined.get("source_datasets", [])
@@ -518,8 +536,15 @@ def _run_company_investigation(task_id, query):
     actions = recommendation_strings(reasoning)
 
     synthesis = {
-        "executive_summary": raw or reasoning.get("executive_summary_draft", ""),
+        "executive_summary": raw,
         "verified_summary": reasoning.get("executive_summary_draft", ""),
+        "synthesis_fallback": synthesis_fallback,
+        "synthesis_note": (
+            "Nemotron synthesis was unavailable or incomplete; "
+            "deterministic verified evidence was used instead."
+            if synthesis_fallback
+            else None
+        ),
         "key_insights": key_insights,
         "risks": risks,
         "recommended_actions": actions,
