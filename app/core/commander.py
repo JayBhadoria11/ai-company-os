@@ -483,6 +483,7 @@ def _run_company_investigation(task_id, query):
         questions,
     )
 
+    synthesis_failure_reason = None
     try:
         raw = get_completion(
             prompt=prompt,
@@ -495,23 +496,31 @@ def _run_company_investigation(task_id, query):
             temperature=0.1,
             max_tokens=4000,
         )
-    except ValueError:
+    except ValueError as exc:
         raw = None
+        synthesis_failure_reason = str(exc)
 
     raw = _sanitize_investigation_text(raw) if raw else None
 
     # Never treat empty or truncated (finish_reason="length") Nemotron output
     # as a successful answer. When synthesis is unusable, fall back to the
     # deterministic reasoning pack and label it clearly so we never claim that
-    # Nemotron synthesis succeeded.
+    # Nemotron synthesis succeeded. Preserve the real failure reason so a later
+    # investigation can distinguish empty content from finish_reason="length".
     synthesis_fallback = raw is None or not raw.strip()
 
     if synthesis_fallback:
         verified_summary = reasoning.get("executive_summary_draft", "") or ""
+        reason_clause = (
+            f" (reason: {synthesis_failure_reason})"
+            if synthesis_failure_reason
+            else ""
+        )
         raw = (
             "AI synthesis was unavailable: Nemotron returned empty or "
-            "truncated output. The following is a deterministic fallback "
-            "built from verified evidence, not Nemotron synthesis."
+            f"truncated output{reason_clause}. The following is a "
+            "deterministic fallback built from verified evidence, not "
+            "Nemotron synthesis."
             + (f"\n\n{verified_summary}" if verified_summary else "")
         ).strip()
 
@@ -539,6 +548,7 @@ def _run_company_investigation(task_id, query):
         "executive_summary": raw,
         "verified_summary": reasoning.get("executive_summary_draft", ""),
         "synthesis_fallback": synthesis_fallback,
+        "synthesis_failure_reason": synthesis_failure_reason,
         "synthesis_note": (
             "Nemotron synthesis was unavailable or incomplete; "
             "deterministic verified evidence was used instead."

@@ -264,28 +264,75 @@ def _build_sales_recommendations(sales_pattern):
             f"the underperforming product segment ({weakest_product.get('name')})"
         )
 
+    has_regions = bool(sales_pattern.get("regions"))
+    has_products = bool(sales_pattern.get("products"))
+    has_monthly = bool(sales_pattern.get("monthly"))
+
     if targets:
         statement = "Investigate the drivers of " + " and ".join(targets)
-    else:
-        statement = "Investigate regional, product, and time-based sales performance"
 
-    if strongest_month:
-        statement += (
-            f", then assess the strongest monthly sales period "
-            f"({strongest_month.get('month')}) for repeatable growth patterns."
+        if strongest_month:
+            statement += (
+                f", then assess the strongest monthly sales period "
+                f"({strongest_month.get('month')}) for repeatable growth patterns."
+            )
+        else:
+            statement += " to identify repeatable growth patterns."
+
+        return [
+            {
+                "statement": statement,
+                "reason": (
+                    "Derived from the strongest/weakest deterministic "
+                    "sales patterns."
+                ),
+                "supporting_steps": [
+                    "Compare regional demand drivers.",
+                    "Review underperforming product margins and volumes.",
+                    "Validate whether the strongest period is repeatable.",
+                ],
+            }
+        ]
+
+    # No verified region/product underperformance targets exist. Only make
+    # claims supported by the available dimensions; otherwise recommend data
+    # validation / collecting the missing fields.
+    missing = []
+    if not has_regions:
+        missing.append("region")
+    if not has_products:
+        missing.append("product")
+
+    if missing:
+        statement = (
+            "Validate or collect the "
+            + " and ".join(missing)
+            + " field(s) in the sales dataset before performing regional or "
+            "product sales analysis."
         )
+        reason = (
+            "The sales dataset does not contain verified "
+            + " and ".join(missing)
+            + " data."
+        )
+    elif has_monthly:
+        statement = (
+            "Investigate time-based sales performance to identify repeatable "
+            "growth patterns."
+        )
+        reason = "Verified time-based sales evidence is available."
     else:
-        statement += " to identify repeatable growth patterns."
+        statement = (
+            "Validate the sales dataset before drawing regional, product, or "
+            "time-based conclusions."
+        )
+        reason = "No regional, product, or time-based sales evidence is available."
 
     return [
         {
             "statement": statement,
-            "reason": "Derived from the strongest/weakest deterministic sales patterns.",
-            "supporting_steps": [
-                "Compare regional demand drivers.",
-                "Review underperforming product margins and volumes.",
-                "Validate whether the strongest period is repeatable.",
-            ],
+            "reason": reason,
+            "supporting_steps": [],
         }
     ]
 
@@ -915,11 +962,28 @@ def _build_executive_summary(
                 sentence += f", a {trend}% change from first to last period"
             parts.append(sentence + ".")
 
-        parts.append(
-            "Management should investigate the drivers of the weakest region "
-            "and underperforming product segment first, then assess whether the "
-            "strongest sales period is repeatable."
-        )
+        guidance = []
+        if sales_pattern.get("regions"):
+            guidance.append("the drivers of the weakest region")
+        if sales_pattern.get("products"):
+            guidance.append("the underperforming product segment")
+        if sales_pattern.get("monthly"):
+            guidance.append(
+                "whether the strongest sales period is repeatable"
+            )
+
+        if guidance:
+            parts.append(
+                "Management should investigate "
+                + " and ".join(guidance)
+                + "."
+            )
+        else:
+            parts.append(
+                "The sales dataset does not include verified region or product "
+                "fields. Collect or validate region and product data before "
+                "performing regional or product-level analysis."
+            )
 
     if primary_workforce:
         _, workforce = primary_workforce
