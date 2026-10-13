@@ -1,14 +1,14 @@
 # AI Company OS
 
-**Track:** Best Apps & Agents  
-**Developers:** Team of two  
+**Track:** Best Apps & Agents\
+**Developers:** Team of two\
 **Hackathon:** NVIDIA × Nebius Global AI Hackathon
 
 AI Company OS is an evidence-grounded multi-agent AI operating system for business intelligence and decision-making. It connects company data to deterministic analytics, specialist agents, NVIDIA Nemotron, executive synthesis, human approval, and persistent decision history.
 
 Instead of treating an LLM as a chatbot that directly guesses answers from raw business data, AI Company OS separates **verified computation from AI reasoning**:
 
-```text
+```
 Company Data
      ↓
 Deterministic Analytics
@@ -26,6 +26,7 @@ Executive Intelligence
 Human Approval
      ↓
 Decision History
+
 ```
 
 ## Project Purpose
@@ -50,7 +51,7 @@ Nemotron then interprets the evidence, identifies important trends, compares fin
 
 This allows the system to separate:
 
-```text
+```
 Deterministic Layer
     ↓
 Facts, metrics, trends and evidence
@@ -58,6 +59,7 @@ Facts, metrics, trends and evidence
 NVIDIA Nemotron
     ↓
 Reasoning, synthesis and recommendations
+
 ```
 
 ### Why NVIDIA Nemotron?
@@ -205,7 +207,7 @@ the system explicitly identifies those limitations rather than fabricating value
 
 ## Project Structure
 
-```text
+```
 package/
 ├── app/
 │   ├── core/
@@ -246,6 +248,7 @@ package/
 ├── pytest.ini
 ├── requirements.txt
 └── README.md
+
 ```
 
 ## Setup
@@ -261,26 +264,26 @@ Recommended environment:
 
 ### 1. Clone the repository
 
-```powershell
+```
 git clone https://github.com/JayBhadoria11/ai-company-os.git
 cd ai-company-os
 ```
 
 ### 2. Create a Python virtual environment
 
-```powershell
+```
 python -m venv .venv
 ```
 
 Activate it in PowerShell:
 
-```powershell
+```
 .\.venv\Scripts\Activate.ps1
 ```
 
 ### 3. Install Python dependencies
 
-```powershell
+```
 pip install -r requirements.txt
 ```
 
@@ -288,13 +291,13 @@ pip install -r requirements.txt
 
 Copy the environment template:
 
-```powershell
+```
 Copy-Item .env.example .env
 ```
 
 Open `.env` and add your own Nebius Token Factory API key:
 
-```env
+```
 NEBIUS_API_KEY=your_api_key_here
 NEBIUS_BASE_URL=https://api.studio.nebius.ai/v1
 MODEL_NAME=nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
@@ -308,7 +311,7 @@ MODEL_NAME=nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
 
 Build the React dashboard once:
 
-```powershell
+```
 cd frontend
 npm install
 npm run build
@@ -317,14 +320,15 @@ cd ..
 
 Then start FastAPI:
 
-```powershell
+```
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 Open:
 
-```text
+```
 http://localhost:8000
+
 ```
 
 The FastAPI application serves both the API and the production React dashboard.
@@ -337,13 +341,13 @@ For frontend development with hot reload, use two terminals.
 
 Terminal 1 — API:
 
-```powershell
+```
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
 Terminal 2 — frontend:
 
-```powershell
+```
 cd frontend
 npm install
 npm run dev
@@ -351,8 +355,9 @@ npm run dev
 
 The development frontend defaults to:
 
-```text
+```
 http://127.0.0.1:8000
+
 ```
 
 for API requests.
@@ -365,7 +370,7 @@ The repository includes a bundled demo dataset and a ready-to-use demo workspace
 
 Seed the demo workspace with:
 
-```powershell
+```
 python scripts/seed_demo.py
 ```
 
@@ -375,11 +380,39 @@ It only initializes the demo workspace when the Company Workspace is completely 
 
 Running it again on a populated workspace safely reports that seeding was skipped.
 
+## Demo Dataset: Retail Demand & Inventory
+
+The repository's demo dataset is `demo_data/sales_data.csv`, a retail demand and inventory dataset that judges can use to explore the application with sample data instead of uploading their own.
+
+**Dataset overview**
+
+- **Rows:** 76,000
+- **Columns:** 16
+- **Date range:** January 2022 onward (see the `Date` column for the exact range)
+- **Dimensions:** store, product, category, region, weather condition, and seasonality
+- **Operational fields:** inventory level, units sold, units ordered, price, discount, promotion, competitor pricing, epidemic indicator, and demand
+
+The dataset can be used to explore patterns in demand, units sold, inventory, category and regional differences, pricing, discounts, promotions, weather, and seasonality. The application should only report metrics supported by the dataset; this file does not contain a dedicated revenue, cost, or profit column.
+
+### Try the demo dataset
+
+1. Open the [AI Company OS live demo](https://ai-company-os-bff7.onrender.com/).
+2. In the company workspace, upload `demo_data/sales_data.csv` if it is not already loaded.
+3. Run an analysis using questions such as:
+   - Which regions and product categories have the highest unit sales?
+   - How do demand and units sold vary over time?
+   - How are inventory levels related to demand?
+   - How do discounts, promotions, and competitor pricing vary across the dataset?
+4. Review the deterministic findings and, if configured, the NVIDIA Nemotron synthesis and recommendations.
+
+If you are running the project locally, keep the CSV at `demo_data/sales_data.csv` in the repository and upload it through the application. The existing `scripts/seed_demo.py` command initializes the demo workspace only when that workspace is completely empty; it does not automatically guarantee that this separate CSV is loaded into an already-running or deployed workspace.
+
+
 ## Example Workflow
 
 A typical investigation follows this flow:
 
-```text
+```
 1. User asks a business question
              ↓
 2. Commander identifies the required specialist
@@ -399,6 +432,7 @@ A typical investigation follows this flow:
 9. Human reviews and approves/rejects
              ↓
 10. Decision is stored in history
+
 ```
 
 ## Large Dataset Context Management
@@ -424,7 +458,7 @@ This allows the application to work with substantially larger datasets while kee
 
 Run the complete Python test suite:
 
-```powershell
+```
 python -m pytest
 ```
 
@@ -438,13 +472,13 @@ Live Nemotron testing is opt-in.
 
 Set:
 
-```powershell
+```
 $env:NEBIUS_LIVE_TESTS=1
 ```
 
 Then run:
 
-```powershell
+```
 python -m pytest tests/test_live_nebius.py
 ```
 
@@ -454,7 +488,7 @@ A valid `NEBIUS_API_KEY` must be configured.
 
 From the frontend directory:
 
-```powershell
+```
 cd frontend
 npm run lint
 npm run build
@@ -466,20 +500,21 @@ AI Company OS includes a production Dockerfile.
 
 Build the image:
 
-```powershell
+```
 docker build -t ai-company-os .
 ```
 
 Run it:
 
-```powershell
+```
 docker run --rm -p 8000:8000 --env-file .env ai-company-os
 ```
 
 Then open:
 
-```text
+```
 http://localhost:8000
+
 ```
 
 The Docker image builds the React frontend and packages it with the FastAPI backend so the application can run as a single service.
@@ -488,15 +523,15 @@ The Docker image builds the React frontend and packages it with the FastAPI back
 
 Live demo:
 
-https://ai-company-os-bff7.onrender.com/
+[https://ai-company-os-bff7.onrender.com/](https://ai-company-os-bff7.onrender.com/)
 
 Health check:
 
-https://ai-company-os-bff7.onrender.com/health
+[https://ai-company-os-bff7.onrender.com/health](https://ai-company-os-bff7.onrender.com/health)
 
 Source code:
 
-https://github.com/JayBhadoria11/ai-company-os
+[https://github.com/JayBhadoria11/ai-company-os](https://github.com/JayBhadoria11/ai-company-os)
 
 ## Security
 
@@ -592,7 +627,7 @@ Potential future extensions include:
 
 AI Company OS is released under the **MIT License**.
 
-See [`LICENSE`](LICENSE) for the complete license text.
+See [`LICENSE`](https://github.com/JayBhadoria11/ai-company-os/blob/main/LICENSE) for the complete license text.
 
 ## Hackathon
 
