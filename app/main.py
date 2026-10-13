@@ -42,6 +42,13 @@ from app.database.db import (
     update_intelligence_question_status,
     get_intelligence_questions,
     delete_intelligence_question,
+    log_analysis,
+)
+
+from app.core.approval import (
+    create_approval_request,
+    list_pending_approvals,
+    update_approval,
 )
 
 
@@ -588,6 +595,46 @@ def investigate(request: InvestigationRequest):
     try:
         result = run_commander_task(task_id, query)
 
+        synthesis = (result.get("metrics") or {}).get("nvidia_synthesis") or {}
+        recommendations = result.get("recommendations") or []
+
+        # Persist the investigation so it appears in /api/history and feeds the
+        # Command Center / History views. Best-effort: a persistence failure must
+        # not turn a successful investigation into an error.
+        try:
+            log_analysis(
+                query_text=query,
+                metrics_calculated=result.get("metrics") or {},
+                insights=synthesis,
+                model="NVIDIA Nemotron",
+                tools_used={"source": "commander"},
+                user_approval=0,
+                result=result,
+                synthesis=synthesis,
+                task_id=task_id,
+                context_type=(
+                    "company"
+                    if get_active_company().get("active")
+                    else "general"
+                ),
+            )
+        except Exception:
+            pass
+
+        # Create a genuine pending approval request for the primary
+        # recommendation. create_approval_request upserts by task_id, so
+        # retries/refreshes of the same task never create duplicates. The
+        # server-side execution gate (action_engine.execute_action) remains the
+        # only thing that may act, and only after an explicit approval.
+        if recommendations:
+            try:
+                create_approval_request(
+                    task_id,
+                    summary=str(recommendations[0]),
+                )
+            except Exception:
+                pass
+
         update_intelligence_question_status(question_id, "success")
 
         return {
@@ -606,6 +653,41 @@ def investigate(request: InvestigationRequest):
             "query": query,
             "message": str(exc),
         }
+
+
+# ---------------------------------------------------------------------------
+# Approvals
+# ---------------------------------------------------------------------------
+
+class ApprovalDecisionRequest(BaseModel):
+    status: str
+
+
+@app.get("/api/approvals", tags=["approvals"])
+def approvals():
+    """Return the persisted pending human-approval requests, newest first."""
+    try:
+        records = list_pending_approvals()
+        return {"status": "success", "approvals": records}
+    except Exception as exc:
+        return {"status": "error", "approvals": [], "message": str(exc)}
+
+
+@app.post("/api/approvals/{task_id}/decision", tags=["approvals"])
+def decide_approval(task_id: str, request: ApprovalDecisionRequest):
+    """Record a human approve/reject decision.
+
+    This only updates the persisted approval record; it never executes any
+    action. The server-side gate (action_engine.execute_action) is the sole
+    path that may act, and it requires an approved, non-pending approval.
+    """
+    status = (request.status or "").strip().lower()
+
+    try:
+        record = update_approval(task_id, status)
+        return {"status": "success", "approval": record}
+    except ValueError as exc:
+        return {"status": "error", "message": str(exc)}
 
 
 # ---------------------------------------------------------------------------

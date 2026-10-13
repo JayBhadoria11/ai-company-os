@@ -52,6 +52,8 @@ AVAILABLE_AGENTS = {
 # ---------------------------------------------------------------------------
 SYNTHESIS_EVIDENCE_CHAR_LIMIT = 14000
 SYNTHESIS_PROMPT_CHAR_BUDGET = 26000
+SYNTHESIS_REASONING_CHAR_LIMIT = 7000
+SYNTHESIS_DRAFT_CHAR_LIMIT = 1500
 
 # Top-N slices kept in the synthesis evidence digest. These are display-only
 # caps: the full deterministic analysis is still stored in the agent metrics.
@@ -341,8 +343,17 @@ def _build_company_prompt(company, combined, reasoning, questions):
         _compact_evidence_for_prompt(combined.get("evidence", {})),
         SYNTHESIS_EVIDENCE_CHAR_LIMIT,
     )
+    summary_draft = reasoning.get("executive_summary_draft", "") or ""
 
-    return f"""
+    if len(summary_draft) > SYNTHESIS_DRAFT_CHAR_LIMIT:
+        summary_draft = summary_draft[:SYNTHESIS_DRAFT_CHAR_LIMIT]
+    reasoning_text = _bounded_json(
+        reasoning_context,
+        SYNTHESIS_REASONING_CHAR_LIMIT,
+    )
+
+    def _render(rc, draft):
+        return f"""
 You are the final business intelligence analyst for {company}.
 
 Answer {scope}, separately and in order.
@@ -393,10 +404,10 @@ REASONING RULES:
   such as "No question was provided".
 
 DETERMINISTIC REASONING PACK (authoritative — do not contradict):
-{json.dumps(reasoning_context, separators=(",", ":"), default=str)}
+{rc}
 
 AUTHORITATIVE EXECUTIVE SUMMARY DRAFT:
-{reasoning.get("executive_summary_draft", "")}
+{draft}
 
 Your executive summary must preserve this draft's facts, uncertainty and labels.
 
@@ -413,6 +424,22 @@ End with an EXECUTIVE SUMMARY that answers, in order: what is verified, what
 scenario was calculated, what risks are indicated, what cannot be determined,
 and what management should do next.
 """
+
+    prompt = _render(reasoning_text, summary_draft)
+
+    # Hard total-prompt budget: keep the assembled prompt within
+    # SYNTHESIS_PROMPT_CHAR_BUDGET by trimming the reasoning-pack digest. The
+    # stored reasoning pack and verified evidence are always preserved.
+    for _ in range(5):
+        if len(prompt) <= SYNTHESIS_PROMPT_CHAR_BUDGET:
+            break
+        reasoning_text = _bounded_json(
+            reasoning_context,
+            max(1200, len(reasoning_text) - 4000),
+        )
+        prompt = _render(reasoning_text, summary_draft)
+
+    return prompt
 
 
 def _run_company_investigation(task_id, query):

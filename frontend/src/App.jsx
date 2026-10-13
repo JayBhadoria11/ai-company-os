@@ -2755,9 +2755,11 @@ function Agents() {
   );
 }
 function Approvals() {
-  const [decision, setDecision] = useState("pending");
   const [company, setCompany] = useState(null);
   const [events, setEvents] = useState([]);
+  const [approvals, setApprovals] = useState([]);
+  const [resolved, setResolved] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -2766,10 +2768,12 @@ function Approvals() {
       setLoading(true);
       setError("");
 
-      const [companyResult, historyResult] = await Promise.allSettled([
-        apiRequest(`${API_URL}/api/company`).then((r) => r.json()),
-        apiRequest(`${API_URL}/api/history`).then((r) => r.json()),
-      ]);
+      const [companyResult, historyResult, approvalsResult] =
+        await Promise.allSettled([
+          apiRequest(`${API_URL}/api/company`).then((r) => r.json()),
+          apiRequest(`${API_URL}/api/history`).then((r) => r.json()),
+          apiRequest(`${API_URL}/api/approvals`).then((r) => r.json()),
+        ]);
 
       if (companyResult.status === "fulfilled") {
         setCompany(companyResult.value);
@@ -2781,17 +2785,64 @@ function Approvals() {
         setEvents(historyResult.value.events || []);
       }
 
+      if (approvalsResult.status === "fulfilled") {
+        setApprovals(approvalsResult.value.approvals || []);
+      } else {
+        setError((current) => current || "Unable to load pending approvals.");
+      }
+
       setLoading(false);
     }
 
     load();
   }, []);
 
+  async function submitDecision(status) {
+    const active = approvals[0];
+    if (!active || saving) return;
+
+    setSaving(true);
+    try {
+      const response = await apiRequest(
+        `${API_URL}/api/approvals/${encodeURIComponent(active.task_id)}/decision`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        }
+      );
+      const data = await response.json();
+
+      if (!response.ok || data.status === "error") {
+        throw new Error(data.message || `API returned ${response.status}`);
+      }
+
+      setResolved({ summary: active.summary, status });
+      setApprovals((current) =>
+        current.filter((item) => item.task_id !== active.task_id)
+      );
+    } catch (err) {
+      setError(err.message || "Unable to record the decision.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const metrics = company?.metrics || {};
   const active = Boolean(company?.active);
   const limitations = company?.limitations || [];
   const latest = events[0] || null;
-  const recommendation = latest?.recommendations?.[0] || null;
+  const activeApproval = approvals[0] || null;
+  const recommendation = activeApproval
+    ? activeApproval.summary
+    : resolved
+    ? resolved.summary
+    : null;
+  const decision = activeApproval
+    ? "pending"
+    : resolved
+    ? resolved.status
+    : "pending";
   const summary = latest?.executive_summary || "";
 
   const money = (value) =>
@@ -2901,18 +2952,20 @@ function Approvals() {
                     <>
                       <button
                         className="primary-action"
-                        onClick={() => setDecision("approved")}
+                        disabled={saving}
+                        onClick={() => submitDecision("approved")}
                       >
                         <CheckCircle2 size={17} />
-                        Approve Recommendation
+                        {saving ? "Recording…" : "Approve Recommendation"}
                       </button>
 
                       <button
                         className="secondary-action"
-                        onClick={() => setDecision("rejected")}
+                        disabled={saving}
+                        onClick={() => submitDecision("rejected")}
                       >
                         <X size={17} />
-                        Reject
+                        {saving ? "Recording…" : "Reject"}
                       </button>
                     </>
                   ) : (
@@ -2925,7 +2978,7 @@ function Approvals() {
 
                       <div>
                         <strong>Recommendation {decision}</strong>
-                        <span>Human decision recorded for this session.</span>
+                        <span>Human decision recorded and persisted.</span>
                       </div>
                     </div>
                   )}

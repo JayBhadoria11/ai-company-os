@@ -71,6 +71,21 @@ def get_approval(task_id):
     return dict(row) if row else None
 
 
+def list_pending_approvals():
+    """Return all pending approval requests, newest first."""
+    initialize_approvals()
+    with get_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT *
+            FROM approval_requests
+            WHERE status = 'pending'
+            ORDER BY id DESC
+            """
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
 def update_approval(task_id, status):
     if status not in {"approved", "rejected"}:
         raise ValueError("Approval status must be 'approved' or 'rejected'.")

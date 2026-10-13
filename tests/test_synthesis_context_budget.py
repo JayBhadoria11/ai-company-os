@@ -138,6 +138,29 @@ def test_compact_serialization_is_smaller_than_raw(workspace):
     assert len(compact) <= commander.SYNTHESIS_PROMPT_CHAR_BUDGET
 
 
+def test_prompt_respects_budget_with_bloated_reasoning(workspace):
+    _seed()
+    combined, reasoning = _build_context(
+        "What are the strongest and weakest sales patterns across regions, "
+        "products, and time, and what should management investigate first?"
+    )
+
+    # Inflate the parts that reach the prompt digest (raw sales_pattern lists
+    # are dropped by _compact_reasoning_for_prompt, so bloat the kept fields).
+    reasoning["verified_facts"] = [
+        {"label": "VERIFIED FACT", "statement": f"Fact number {i}"}
+        for i in range(3000)
+    ]
+    reasoning["executive_summary_draft"] = "Draft sentence. " * 2000
+
+    prompt = commander._build_company_prompt(
+        "TestCo", combined, reasoning, ["What should management investigate?"]
+    )
+
+    assert len(prompt) <= commander.SYNTHESIS_PROMPT_CHAR_BUDGET
+    assert "train.csv" in prompt.lower() or "train.csv" in prompt
+
+
 def test_commander_sends_bounded_prompt_and_keeps_full_analysis(
     workspace, monkeypatch
 ):
